@@ -23,6 +23,8 @@ class DocumentViewController: UIViewController {
             let name = document.name
             nameTextField.text = name
             contentTextView.text = document.content
+            //Addded in var to use for return when filtering
+            let content = document.content
             title = name
         }
     }

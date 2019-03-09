@@ -24,7 +24,8 @@ class DocumentsViewController: UIViewController, UITableViewDataSource, UITableV
         super.viewDidLoad()
         
         // Setup the Search Controller. Added in
-        searchController.searchResultsUpdater = self
+        //Issue, added in as! UISearchResultsUpdating dont sure if thats good
+        searchController.searchResultsUpdater = self as! UISearchResultsUpdating
         searchController.obscuresBackgroundDuringPresentation = false   //Maybe change?
         searchController.searchBar.placeholder = "Search Documents"
         navigationItem.searchController = searchController
@@ -59,10 +60,11 @@ class DocumentsViewController: UIViewController, UITableViewDataSource, UITableV
         let fetchRequest: NSFetchRequest<Document> = Document.fetchRequest()
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)] // order results by document name ascending
     
-        
+        //Added in
 //        if let query = searchController.searchBar.text {
 //            fetchRequest.predicate = NSPredicate(format: "name CONTAINS %@ OR content CONTAINS %@", query, query)
 //        }
+        //End of Added in
         
         do {
             documents = try managedContext.fetch(fetchRequest)
@@ -131,6 +133,8 @@ class DocumentsViewController: UIViewController, UITableViewDataSource, UITableV
         if let cell = cell as? DocumentTableViewCell {
             var document = documents[indexPath.row]
             
+            //add in content bodies?
+            //indexpathrow only referring to names somehow?
             if isFiltering() {
                 document = filteredDocuments[indexPath.row]
             } else {
@@ -192,15 +196,26 @@ class DocumentsViewController: UIViewController, UITableViewDataSource, UITableV
         return searchController.searchBar.text?.isEmpty ?? true
     }
     
+    func filterNamesForSearchText(_ searchText: String, scope: String = "All") {
+        
+        //Might have naming conflict? Maybe chagne from document here?
+        filteredDocuments = documents.filter({( document : Document) -> Bool in
+            //Issue: with optionals and possible nils here I may need to resolve later
+            
+            return (document.name?.lowercased().contains(searchText.lowercased()))!
+            
+            //return ((document.name?.lowercased().contains(searchText.lowercased()))!)
+        })
+    
     func filterContentForSearchText(_ searchText: String, scope: String = "All") {
         
         //Might have naming conflict? Maybe chagne from document here?
         filteredDocuments = documents.filter({( document : Document) -> Bool in
             //Issue: with optionals and possible nils here I may need to resolve later
-            return (document.name?.lowercased().contains(searchText.lowercased()))!
+            
+            return (document.content?.lowercased().contains(searchText.lowercased()))!
         })
         
-        //Issue:
         documentsTableView.reloadData()
     }
     
@@ -218,6 +233,9 @@ class DocumentsViewController: UIViewController, UITableViewDataSource, UITableV
 extension DocumentsViewController: UISearchResultsUpdating {
     // MARK: - UISearchResultsUpdating Delegate
     func updateSearchResults(for searchController: UISearchController) {
+
+        filterNamesForSearchText(searchController.searchBar.text!)
+        
         filterContentForSearchText(searchController.searchBar.text!)
     }
 }
